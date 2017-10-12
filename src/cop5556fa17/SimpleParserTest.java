@@ -8,7 +8,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import cop5556fa17.Scanner.LexicalException;
-import cop5556fa17.SimpleParser.SyntaxException;
+import cop5556fa17.Parser.SyntaxException;
 
 public class SimpleParserTest {
 
@@ -40,7 +40,7 @@ public class SimpleParserTest {
 		Scanner scanner = new Scanner(input).scan(); // Create a Scanner and
 														// initialize it
 		show(scanner); // Display the Scanner
-		SimpleParser parser = new SimpleParser(scanner); // Create a parser
+		Parser parser = new Parser(scanner); // Create a parser
 		thrown.expect(SyntaxException.class);
 		try {
 			parser.parse(); // Parse the program
@@ -60,34 +60,45 @@ public class SimpleParserTest {
 	
 	@Test
 	public void testDec1() throws LexicalException, SyntaxException {
-		String input = "prog int k;";
+		String input = "pay oi <- @A|abg[true, false] ;";
 		show(input);
 		Scanner scanner = new Scanner(input).scan(); // Create a Scanner and
 														// initialize it
 		show(scanner); // Display the Scanner
-		SimpleParser parser = new SimpleParser(scanner); //
+		Parser parser = new Parser(scanner); //
 		parser.parse();
 	}
 	
 	@Test
-	public void testDec4() throws LexicalException, SyntaxException {
-		String input = "sin(a+b)]";
+	public void testDec45() throws LexicalException, SyntaxException {
+		String input = "3*a/x%-Z";
 		show(input);
 		Scanner scanner = new Scanner(input).scan(); // Create a Scanner and
 														// initialize it
 		show(scanner); // Display the Scanner
-		SimpleParser parser = new SimpleParser(scanner); //
+		Parser parser = new Parser(scanner); //
+		parser.expression();
+	}
+	
+	@Test
+	public void testDec45sd() throws LexicalException, SyntaxException {
+		String input = "polar_r((5) | true))";
+		show(input);
+		Scanner scanner = new Scanner(input).scan(); // Create a Scanner and
+														// initialize it
+		show(scanner); // Display the Scanner
+		Parser parser = new Parser(scanner); //
 		parser.expression();
 	}
 	
 	@Test
 	public void testDec2() throws LexicalException, SyntaxException {
-		String input = "\"hello\"123\"456\"";
+		String input = "\"jsdkfhk\"123\"456\"";
 		show(input);
 		Scanner scanner = new Scanner(input).scan(); // Create a Scanner and
 														// initialize it
 		show(scanner); // Display the Scanner
-		SimpleParser parser = new SimpleParser(scanner); //
+		Parser parser = new Parser(scanner); //
 		thrown.expect(SyntaxException.class);
 		try {
 			parser.parse(); // Parse the program
@@ -98,13 +109,13 @@ public class SimpleParserTest {
 	}
 	
 	@Test
-	public void testDec3() throws LexicalException, SyntaxException {
+	public void testDec34() throws LexicalException, SyntaxException {
 		String input = "abdz = something;";
 		show(input);
 		Scanner scanner = new Scanner(input).scan(); // Create a Scanner and
 														// initialize it
 		show(scanner); // Display the Scanner
-		SimpleParser parser = new SimpleParser(scanner); //
+		Parser parser = new Parser(scanner); //
 		thrown.expect(SyntaxException.class);
 		try {
 			parser.parse(); // Parse the program
@@ -121,7 +132,7 @@ public class SimpleParserTest {
 			show(name);
 			Scanner scanner = new Scanner(name).scan();
 			show(scanner);
-			SimpleParser parser = new SimpleParser(scanner);
+			Parser parser = new Parser(scanner);
 			parser.source(); // Call expression directly.
 		}		
 	}
@@ -134,7 +145,7 @@ public class SimpleParserTest {
 			show(name);
 			Scanner scanner = new Scanner(name).scan();
 			show(scanner);
-			SimpleParser parser = new SimpleParser(scanner);
+			Parser parser = new Parser(scanner);
 			parser.program(); // Call expression directly.
 		}		
 	}
@@ -146,7 +157,7 @@ public class SimpleParserTest {
 			show(name);
 			Scanner scanner = new Scanner(name).scan();
 			show(scanner);
-			SimpleParser parser = new SimpleParser(scanner);
+			Parser parser = new Parser(scanner);
 			parser.declaration(); // Call expression directly.
 		}		
 	}
@@ -158,7 +169,7 @@ public class SimpleParserTest {
 			show(name);
 			Scanner scanner = new Scanner(name).scan();
 			show(scanner);
-			SimpleParser parser = new SimpleParser(scanner);
+			Parser parser = new Parser(scanner);
 			parser.variableDeclaration(); // Call expression directly.
 		}		
 	}
@@ -170,7 +181,7 @@ public class SimpleParserTest {
 			show(name);
 			Scanner scanner = new Scanner(name).scan();
 			show(scanner);
-			SimpleParser parser = new SimpleParser(scanner);
+			Parser parser = new Parser(scanner);
 			parser.sourceSinkDeclaration(); // Call expression directly.
 		}		
 	}
@@ -182,7 +193,7 @@ public class SimpleParserTest {
 			show(name);
 			Scanner scanner = new Scanner(name).scan();
 			show(scanner);
-			SimpleParser parser = new SimpleParser(scanner);
+			Parser parser = new Parser(scanner);
 			parser.imageDeclaration(); // Call expression directly.
 		}		
 	}
@@ -201,11 +212,11 @@ public class SimpleParserTest {
 	 */
 	@Test
 	public void expression1() throws SyntaxException, LexicalException {
-		String input = "2";
+		String input = "++++x";
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.expression(); // Call expression directly.
 	}
 	
@@ -215,7 +226,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.statement();
 	}
 	
@@ -225,7 +236,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.statement();
 	}
 	
@@ -235,7 +246,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.statement();
 	}
 	
@@ -245,7 +256,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.imageOutStatement();
 	}
 	
@@ -255,7 +266,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.sink(); // Call expression directly.
 	}
 	
@@ -265,7 +276,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.ImageInStatement(); // Call expression directly.
 	}
 	
@@ -276,7 +287,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.assignmentStatement(); // Call expression directly.
 	}
 	
@@ -286,7 +297,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.assignmentStatement(); // Call expression directly.
 	}
 	
@@ -297,7 +308,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.identOrPixelSelectorExpression(); // Call expression directly.
 	}
 	
@@ -308,7 +319,7 @@ public class SimpleParserTest {
 			show(name);
 			Scanner scanner = new Scanner(name).scan();
 			show(scanner);
-			SimpleParser parser = new SimpleParser(scanner);
+			Parser parser = new Parser(scanner);
 			parser.unaryExpressionNotPlusMinus(); // Call expression directly.
 		}		
 	}
@@ -319,7 +330,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.unaryExpressionNotPlusMinus(); // Call expression directly.
 	}
 	
@@ -330,7 +341,7 @@ public class SimpleParserTest {
 			show(name);
 			Scanner scanner = new Scanner(name).scan();
 			show(scanner);
-			SimpleParser parser = new SimpleParser(scanner);
+			Parser parser = new Parser(scanner);
 			parser.unaryExpressionNotPlusMinus(); // Call expression directly.
 		}		
 	}
@@ -341,7 +352,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.unaryExpressionNotPlusMinus(); // Call expression directly.
 	}
 	
@@ -352,41 +363,53 @@ public class SimpleParserTest {
 			show(name);
 			Scanner scanner = new Scanner(name).scan();
 			show(scanner);
-			SimpleParser parser = new SimpleParser(scanner);
+			Parser parser = new Parser(scanner);
 			parser.primary(); // Call expression directly.
 		}		
 	}
 	
 	@Test
-	public void expression2() throws SyntaxException, LexicalException {
+	public void expression234() throws SyntaxException, LexicalException {
 		String input =  "x*X + y*Y < x == R & x*X + y*Y < x == R | x*X + y*Y < x == R & x*X + y*Y < x == R";
 		//String input = "+Z*+true++Z*+true";
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.expression(); // Call expression directly.
 	}
 	
 	@Test
-	public void expression3() throws SyntaxException, LexicalException {
+	public void expression2344() throws SyntaxException, LexicalException {
+		String input =  "1 + 2";
+		//String input = "+Z*+true++Z*+true";
+		show(input);
+		Scanner scanner = new Scanner(input).scan();
+		show(scanner);
+		Parser parser = new Parser(scanner);
+		parser.expression(); // Call expression directly.
+	}
+	
+	
+	@Test
+	public void expression3we() throws SyntaxException, LexicalException {
 		String input =  "polar_a(s + f)";
 		//String input = "+Z*+true++Z*+true";
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.expression(); // Call expression directly.
 	}
 	
 	@Test
-	public void expression4() throws SyntaxException, LexicalException {
+	public void expression43() throws SyntaxException, LexicalException {
 		String input =  "polar_a(s + f) ? (a+b) : (c+ d)";
 		//String input = "+Z*+true++Z*+true";
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.expression(); // Call expression directly.
 	}
 	
@@ -397,7 +420,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.selector(); // Call expression directly.
 	}
 	
@@ -408,7 +431,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.orExpression(); // Call expression directly.
 	}
 		
@@ -419,7 +442,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.andExpression(); // Call expression directly.
 	}
 	
@@ -430,7 +453,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.eqExpression(); // Call expression directly.
 	}
 	
@@ -441,7 +464,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.relExpression(); // Call expression directly.
 	}
 	
@@ -452,7 +475,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.addExpression(); // Call expression directly.
 	}
 	
@@ -462,7 +485,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.unaryExpression(); // Call expression directly.
 	}
 	
@@ -472,7 +495,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.unaryExpression(); // Call expression directly.
 	}
 		
@@ -482,7 +505,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.unaryExpression(); // Call expression directly.
 	}
 	
@@ -492,7 +515,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.unaryExpression(); // Call expression directly.
 	}
 	
@@ -502,17 +525,17 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.identOrPixelSelectorExpression(); // Call expression directly.
 	}
 		
 	@Test
-	public void lhsSelector() throws SyntaxException, LexicalException {
+	public void lhsSelector23() throws SyntaxException, LexicalException {
 		String input = "[x , y]";
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.lhsSelector(); // Call expression directly.
 	}
 	
@@ -522,7 +545,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.lhsSelector(); // Call expression directly.
 	}
 	
@@ -532,7 +555,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.lhs(); // Call expression directly.
 	}
 	
@@ -542,7 +565,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.lhs(); // Call expression directly.
 	}
 	
@@ -552,7 +575,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		thrown.expect(SyntaxException.class);
 		try{
 			parser.lhs();
@@ -561,14 +584,13 @@ public class SimpleParserTest {
 		}	
 	}
 	
-	
 	@Test
 	public void lhsSelector_fail() throws SyntaxException, LexicalException {
 		String input = "[r , A";
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		thrown.expect(SyntaxException.class);
 		try{
 			parser.lhsSelector();
@@ -578,24 +600,24 @@ public class SimpleParserTest {
 	}
 	
 	@Test
-	public void functionName() throws SyntaxException, LexicalException {
+	public void functionName234234() throws SyntaxException, LexicalException {
 		List<String> names = Arrays.asList("sin", "cos", "atan", "abs", "cart_x", "cart_y", "polar_a", "polar_r");
 		for(String name : names){
 			show(name);
 			Scanner scanner = new Scanner(name).scan();
 			show(scanner);
-			SimpleParser parser = new SimpleParser(scanner);
+			Parser parser = new Parser(scanner);
 			parser.functionName(); // Call expression directly.
 		}		
 	}
 	
 	@Test
-	public void xySelector() throws SyntaxException, LexicalException {
+	public void xySelector24323() throws SyntaxException, LexicalException {
 		String input = "x , y";
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.xySelector(); // Call expression directly.
 	}
 	
@@ -605,7 +627,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);		
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		thrown.expect(SyntaxException.class);
 		try{
 			parser.xySelector();
@@ -620,7 +642,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		parser.raSelector(); // Call expression directly.
 	}
 	
@@ -630,7 +652,7 @@ public class SimpleParserTest {
 		show(input);
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);		
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		thrown.expect(SyntaxException.class);
 		try{
 			parser.raSelector();

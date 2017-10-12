@@ -148,6 +148,23 @@ public class ScannerTest {
 		checkNext(scanner, SEMI, 4, 1, 2, 2);
 		checkNextIsEOF(scanner);
 	}
+	
+	@Test
+	public void testSemisomething() throws LexicalException {
+		String input = "3*a/x%-Z";
+		Scanner scanner = new Scanner(input).scan();
+		show(input);
+		show(scanner);
+		checkNext(scanner, INTEGER_LITERAL, 0, 1, 1, 1);
+		checkNext(scanner, OP_TIMES, 1, 1, 1, 2);
+		checkNext(scanner, KW_a, 2, 1, 1, 3);
+		checkNext(scanner, OP_DIV, 3, 1, 1, 4);	
+		checkNext(scanner, KW_x, 4, 1, 1, 5);	
+		checkNext(scanner, OP_MOD, 5, 1, 1, 6);	
+		checkNext(scanner, OP_MINUS, 6, 1, 1, 7);
+		checkNext(scanner, KW_Z, 7, 1, 1, 8);
+		checkNextIsEOF(scanner);
+	}
 		
 	@Test
 	public void testIdentifier4() throws LexicalException {

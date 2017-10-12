@@ -670,7 +670,7 @@ public class Scanner {
 						posInLine++;
 					}else{
 						tokens.add(new Token(Kind.OP_DIV, startPos, 1, line, posInLine));
-						pos++;
+						//pos++;
 						posInLine++;
 						startPos = pos;
 						currentState = State.START;

@@ -10,8 +10,39 @@ import java.util.List;
 
 import cop5556fa17.Scanner.Kind;
 import cop5556fa17.Scanner.Token;
+import cop5556fa17.AST.ASTNode;
+import cop5556fa17.AST.Declaration;
+import cop5556fa17.AST.Declaration_Image;
+import cop5556fa17.AST.Declaration_SourceSink;
+import cop5556fa17.AST.Declaration_Variable;
+import cop5556fa17.AST.Expression;
+import cop5556fa17.AST.Expression_Binary;
+import cop5556fa17.AST.Expression_BooleanLit;
+import cop5556fa17.AST.Expression_Conditional;
+import cop5556fa17.AST.Expression_FunctionApp;
+import cop5556fa17.AST.Expression_FunctionAppWithExprArg;
+import cop5556fa17.AST.Expression_FunctionAppWithIndexArg;
+import cop5556fa17.AST.Expression_Ident;
+import cop5556fa17.AST.Expression_IntLit;
+import cop5556fa17.AST.Expression_PixelSelector;
+import cop5556fa17.AST.Expression_PredefinedName;
+import cop5556fa17.AST.Expression_Unary;
+import cop5556fa17.AST.Index;
+import cop5556fa17.AST.LHS;
+import cop5556fa17.AST.Program;
+import cop5556fa17.AST.Sink;
+import cop5556fa17.AST.Sink_Ident;
+import cop5556fa17.AST.Sink_SCREEN;
+import cop5556fa17.AST.Source;
+import cop5556fa17.AST.Source_CommandLineParam;
+import cop5556fa17.AST.Source_Ident;
+import cop5556fa17.AST.Source_StringLiteral;
+import cop5556fa17.AST.Statement;
+import cop5556fa17.AST.Statement_Assign;
+import cop5556fa17.AST.Statement_In;
+import cop5556fa17.AST.Statement_Out;
 
-public class SimpleParser {
+public class Parser {
 
 	@SuppressWarnings("serial")
 	public class SyntaxException extends Exception {
@@ -21,13 +52,12 @@ public class SimpleParser {
 			super(message);
 			this.t = t;
 		}
-
 	}
 
 	Scanner scanner;
 	Token t;	
-	
-	SimpleParser(Scanner scanner) {
+
+	Parser(Scanner scanner) {
 		this.scanner = scanner;
 		t = scanner.nextToken();				
 	}
@@ -37,9 +67,10 @@ public class SimpleParser {
 	 * 
 	 * @throws SyntaxException
 	 */
-	public void parse() throws SyntaxException {
-		program();
+	public Program parse() throws SyntaxException {
+		Program p = program();
 		matchEOF();
+		return p;
 	}
 
 	/**
@@ -49,19 +80,23 @@ public class SimpleParser {
 	 * 
 	 * @throws SyntaxException
 	 */
-	void program() throws SyntaxException {
+	Program program() throws SyntaxException {
+		Token firstToken = t;
+		ArrayList<ASTNode> decsAndStatements = new ArrayList<ASTNode>();
 		if (t.isKind(Kind.IDENTIFIER)) {
 			consume();
 			while (getFirstStatement().contains(t.kind)
 					|| getFirstDeclaration().contains(t.kind)) {
 				if (getFirstStatement().contains(t.kind)) {
-					statement();
+					decsAndStatements.add(statement());
 					match(Kind.SEMI);
 				} else {
-					declaration();
+					decsAndStatements.add(declaration());
 					match(Kind.SEMI);
 				}
 			}
+			
+			return new Program(firstToken, firstToken, decsAndStatements);
 		} else {
 			throw new SyntaxException(t, MessageFormat.format(
 					"The token {0} is invalid at line number {1} , pos {2}",
@@ -69,28 +104,35 @@ public class SimpleParser {
 		}
 	}
 
-	void declaration() throws SyntaxException {
+	Declaration declaration() throws SyntaxException {		
+		Declaration dec = null;
 		if (getFirstVariableDeclaration().contains(t.kind)) {
-			variableDeclaration();
+			dec = variableDeclaration();
 		} else if (getFirstImageDeclaration().contains(t.kind)) {
-			imageDeclaration();
+			dec = imageDeclaration();
 		} else if (getFirstSourceSinkDeclaration().contains(t.kind)) {
-			sourceSinkDeclaration();
+			dec = sourceSinkDeclaration();
 		} else {
 			throw new SyntaxException(t, MessageFormat.format(
 					"The token {0} is invalid at line number {1} , pos {2}",
 					t.kind, t.line, t.pos_in_line));
 		}
+		
+		return dec;
 	}
 
-	void variableDeclaration() throws SyntaxException {
+	Declaration_Variable variableDeclaration() throws SyntaxException {
+		Token firstToken = t;
 		if (getFirstVarType().contains(t.kind)) {
-			varType();
-			match(Kind.IDENTIFIER);
+			Token type = varType();
+			Token name = match(Kind.IDENTIFIER);
+			Expression e = null;
 			if (t.isKind(Kind.OP_ASSIGN)) {
 				consume();
-				expression();
+				e = expression();
 			}
+			
+			return new Declaration_Variable(firstToken, type, name, e);
 		} else {
 			throw new SyntaxException(t, MessageFormat.format(
 					"The token {0} is invalid at line number {1} , pos {2}",
@@ -98,22 +140,27 @@ public class SimpleParser {
 		}
 	}
 
-	void varType() throws SyntaxException {
-		if (getFirstVarType().contains(t.kind)) {
+	Token varType() throws SyntaxException {
+		Token firstToken = t;
+		if (getFirstVarType().contains(t.kind)) {			
 			consume();
 		} else {
 			throw new SyntaxException(t, MessageFormat.format(
 					"The token {0} is invalid at line number {1} , pos {2}",
 					t.kind, t.line, t.pos_in_line));
 		}
+		
+		return firstToken;
 	}
 
-	void sourceSinkDeclaration() throws SyntaxException {
+	Declaration_SourceSink sourceSinkDeclaration() throws SyntaxException {
+		Token firstToken = t;
 		if (getFirstSourceSinkType().contains(t.kind)) {
-			sourceSinkType();
-			match(Kind.IDENTIFIER);
+			Token type = sourceSinkType();
+			Token name = match(Kind.IDENTIFIER);
 			match(Kind.OP_ASSIGN);
-			source();
+			Source source = source();
+			return new Declaration_SourceSink(firstToken, type, name, source);
 		} else {
 			throw new SyntaxException(t, MessageFormat.format(
 					"The token {0} is invalid at line number {1} , pos {2}",
@@ -121,7 +168,8 @@ public class SimpleParser {
 		}
 	}
 
-	void sourceSinkType() throws SyntaxException {
+	Token sourceSinkType() throws SyntaxException {
+		Token firstToken = t;
 		if (getFirstSourceSinkType().contains(t.kind)) {
 			consume();
 		} else {
@@ -129,126 +177,169 @@ public class SimpleParser {
 					"The token {0} is invalid at line number {1} , pos {2}",
 					t.kind, t.line, t.pos_in_line));
 		}
+		
+		return firstToken;
 	}
 
-	void imageDeclaration() throws SyntaxException {
+	Declaration_Image imageDeclaration() throws SyntaxException {
+		Token firstToken = t;
+		Expression xSize = null; Expression ySize = null; Source source = null; Token identName = null;		
 		if (t.isKind(Kind.KW_image)) {
 			consume();
 			if (t.isKind(Kind.LSQUARE)) {
 				consume();
-				expression();
+				xSize = expression();
 				match(Kind.COMMA);
-				expression();
+				ySize = expression();
 				match(Kind.RSQUARE);
 			}
-			match(Kind.IDENTIFIER);
+			identName = match(Kind.IDENTIFIER);
 			if (t.isKind(Kind.OP_LARROW)) {
 				consume();
-				source();
+				source = source();
 			}
 		} else {
 			throw new SyntaxException(t, MessageFormat.format(
 					"The token {0} is invalid at line number {1} , pos {2}",
 					t.kind, t.line, t.pos_in_line));
 		}
+		
+		return new Declaration_Image(firstToken, xSize, ySize, identName, source);
 	}
 
-	void statement() throws SyntaxException {
+	Statement statement() throws SyntaxException {
+		Token firstToken = t;
+		Statement statement = null;
 		if (t.isKind(Kind.IDENTIFIER)) {
 			consume();
 			if (t.isKind(Kind.LSQUARE)) {
-				restAssignmentStatement();
+				statement = restAssignmentStatement(firstToken);
 			} else if (t.isKind(Kind.OP_LARROW)) {
-				restImageInStatement();
+				statement = restImageInStatement(firstToken);
 			} else if (t.isKind(Kind.OP_RARROW)) {
-				restImageOutStatement();
+				statement = restImageOutStatement(firstToken);
 			}else if(t.isKind(Kind.OP_ASSIGN)){
-				consume();
-				expression();
+				//consume();
+				//expression();
+				statement = restAssignmentStatement(firstToken);
 			}else {
 				throw new SyntaxException(
 						t,
 						MessageFormat
-								.format("The token {0} is invalid at line number {1} , pos {2}",
-										t.kind, t.line, t.pos_in_line));
+						.format("The token {0} is invalid at line number {1} , pos {2}",
+								t.kind, t.line, t.pos_in_line));
 			}
 		} else {
 			throw new SyntaxException(t, MessageFormat.format(
 					"The token {0} is invalid at line number {1} , pos {2}",
 					t.kind, t.line, t.pos_in_line));
 		}
+		
+		return statement;
 	}
 
-	void imageOutStatement() throws SyntaxException {
+	Statement_Out imageOutStatement() throws SyntaxException {
+		Statement_Out statementOut = null;
 		if (t.isKind(Kind.IDENTIFIER)) {
+			Token identifier = t;
 			consume();
-			restImageOutStatement();
+			statementOut = restImageOutStatement(identifier);
 		} else {
 			throw new SyntaxException(t, MessageFormat.format(
 					"The token {0} is invalid at line number {1} , pos {2}",
 					t.kind, t.line, t.pos_in_line));
 		}
+		
+		return statementOut;
 	}
-	
-	void restImageOutStatement() throws SyntaxException{
+
+	Statement_Out restImageOutStatement(Token identifier) throws SyntaxException{
 		match(Kind.OP_RARROW);
-		sink();
+		Sink sink = sink();
+		return new Statement_Out(identifier, identifier, sink);
 	}
 
-	void sink() throws SyntaxException {
-		if (t.isKind(Kind.IDENTIFIER) || t.isKind(Kind.KW_SCREEN)) {
+	Sink sink() throws SyntaxException {
+		Sink sink = null;
+		if (t.isKind(Kind.IDENTIFIER)) {
+			sink = new Sink_Ident(t, t);
 			consume();
-		} else {
+		}else if(t.isKind(Kind.KW_SCREEN)) {
+			sink = new Sink_SCREEN(t);
+			consume();
+		}
+		else {
 			throw new SyntaxException(t, MessageFormat.format(
 					"The token {0} is invalid at line number {1} , pos {2}",
 					t.kind, t.line, t.pos_in_line));
 		}
+		
+		return sink;
 	}
 
-	void source() throws SyntaxException {
-		if (t.isKind(Kind.STRING_LITERAL) || t.isKind(Kind.IDENTIFIER)) {
+	Source source() throws SyntaxException {
+		Source src = null;
+		Token firstToken = t;
+		if (t.isKind(Kind.STRING_LITERAL)) {
+			src = new Source_StringLiteral(firstToken, t.getText());
 			consume();
 		} else if (t.isKind(Kind.OP_AT)) {
 			consume();
-			expression();
-		} else {
+			Expression paramNum = expression();
+			src = new Source_CommandLineParam(firstToken, paramNum);
+		}else if(t.isKind(Kind.IDENTIFIER)){
+			src = new Source_Ident(firstToken, t);
+			consume();
+		}else {
 			throw new SyntaxException(t, MessageFormat.format(
 					"The token {0} is invalid at line number {1} , pos {2}",
 					t.kind, t.line, t.pos_in_line));
 		}
+		
+		return src;
 	}
 
-	void ImageInStatement() throws SyntaxException {
+	Statement_In ImageInStatement() throws SyntaxException {
+		Statement_In statementIn = null;
 		if (t.isKind(Kind.IDENTIFIER)) {
+			Token identifier = t;
 			consume();
-			restImageInStatement();
+			statementIn = restImageInStatement(identifier);
 		} else {
 			throw new SyntaxException(t, MessageFormat.format(
 					"The token {0} is invalid at line number {1} , pos {2}",
 					t.kind, t.line, t.pos_in_line));
 		}
+		
+		return statementIn;
 	}
-	
-	void restImageInStatement() throws SyntaxException{
+
+	Statement_In restImageInStatement(Token identifier) throws SyntaxException{
 		match(Kind.OP_LARROW);
-		source();
+		Source source = source();
+		return new Statement_In(identifier, identifier, source);
 	}
 
-	void assignmentStatement() throws SyntaxException {
+	Statement_Assign assignmentStatement() throws SyntaxException {	
+		Statement_Assign stAssign = null;
 		if (t.isKind(Kind.IDENTIFIER)) {
+			Token identifier = t;
 			consume();
-			restAssignmentStatement();
+			stAssign = restAssignmentStatement(identifier);
 		} else {
 			throw new SyntaxException(t, MessageFormat.format(
 					"The token {0} is invalid at line number {1} , pos {2}",
 					t.kind, t.line, t.pos_in_line));
 		}
+		
+		return stAssign;
 	}
-	
-	void restAssignmentStatement() throws SyntaxException{
-		restLhs();
+
+	Statement_Assign restAssignmentStatement(Token firstToken) throws SyntaxException{
+		LHS lhsObj = restLhs(firstToken);
 		match(Kind.OP_ASSIGN);
-		expression();
+		Expression exp = expression();
+		return new Statement_Assign(firstToken, lhsObj, exp);
 	}
 
 	/**
@@ -260,233 +351,334 @@ public class SimpleParser {
 	 * 
 	 * @throws SyntaxException
 	 */
-	void expression() throws SyntaxException {
+	Expression expression() throws SyntaxException {
+		Token firstToken = t;
+		Expression e0 = null;
 		if (getFirstOrExpression().contains(t.kind)) {
-			orExpression();
+			e0 = orExpression();
 			if (t.isKind(Kind.OP_Q)) {
 				consume();
-				expression();
+				Expression trueExpression = expression();
 				match(Kind.OP_COLON);
-				expression();
+				Expression falseExpression = expression();
+				e0 = new Expression_Conditional(firstToken, e0, trueExpression, falseExpression);
 			}
 		} else {
 			throw new SyntaxException(t, MessageFormat.format(
 					"The token {0} is invalid at line number {1} , pos {2}",
 					t.kind, t.line, t.pos_in_line));
 		}
+		return e0;
 	}
 
-	void orExpression() throws SyntaxException {
+	Expression orExpression() throws SyntaxException {
+		Expression e0 = null;
+		Expression e1 = null;
+		Token firstToken = t;
+
 		if (getFirstAddExpression().contains(t.kind)) {
-			andExpression();
+			e0 = andExpression();
 			while (t.isKind(Kind.OP_OR)) {
+				Token currentOperator = t;
 				consume();
-				andExpression();
+				e1 = andExpression();
+				e0 = new Expression_Binary(firstToken, e0, currentOperator, e1);
 			}
 		} else {
 			throw new SyntaxException(t, MessageFormat.format(
 					"The token {0} is invalid at line number {1} , pos {2}",
 					t.kind, t.line, t.pos_in_line));
 		}
+
+		return e0;
 	}
 
-	void andExpression() throws SyntaxException {
+	Expression andExpression() throws SyntaxException {
+		Expression e0 = null;
+		Expression e1 = null;
+		Token firstToken = t;
+
 		if (getFirstEqExpression().contains(t.kind)) {
-			eqExpression();
+			e0 = eqExpression();
 			while (t.isKind(Kind.OP_AND)) {
+				Token currentOperator = t;
 				consume();
-				eqExpression();
+				e1 = eqExpression();
+				e0 = new Expression_Binary(firstToken, e0, currentOperator, e1);
 			}
 		} else {
 			throw new SyntaxException(t, MessageFormat.format(
 					"The token {0} is invalid at line number {1} , pos {2}",
 					t.kind, t.line, t.pos_in_line));
 		}
+
+		return e0;
 	}
 
-	void eqExpression() throws SyntaxException {
+	Expression eqExpression() throws SyntaxException {
+		Expression e0 = null;
+		Expression e1 = null;
+		Token firstToken = t;
+
 		if (getFirstRelExpression().contains(t.kind)) {
-			relExpression();
+			e0 = relExpression();
 			while (t.isKind(Kind.OP_EQ) || t.isKind(Kind.OP_NEQ)) {
+				Token currentOperator = t;
 				consume();
-				relExpression();
+				e1 = relExpression();
+				e0 = new Expression_Binary(firstToken, e0, currentOperator, e1);
 			}
 		} else {
 			throw new SyntaxException(t, MessageFormat.format(
 					"The token {0} is invalid at line number {1} , pos {2}",
 					t.kind, t.line, t.pos_in_line));
 		}
+
+		return e0;
 	}
 
-	void relExpression() throws SyntaxException {
+	Expression relExpression() throws SyntaxException {
+		Expression e0 = null;
+		Expression e1 = null;
+		Token firstToken = t;
+
 		if (getFirstAddExpression().contains(t.kind)) {
-			addExpression();
+			e0 = addExpression();
 			while (t.isKind(Kind.OP_LT) || t.isKind(Kind.OP_GT)
 					|| t.isKind(Kind.OP_LE) || t.isKind(Kind.OP_GE)) {
+				Token currentOperator = t;
 				consume();
-				addExpression();
+				e1 = addExpression();
+				e0 = new Expression_Binary(firstToken, e0, currentOperator, e1);
 			}
 		} else {
 			throw new SyntaxException(t, MessageFormat.format(
 					"The token {0} is invalid at line number {1} , pos {2}",
 					t.kind, t.line, t.pos_in_line));
 		}
+
+		return e0;
 	}
 
-	void addExpression() throws SyntaxException {
+	Expression addExpression() throws SyntaxException {
+		Expression e0 = null;
+		Expression e1 = null;
+		Token firstToken = t;
+
 		if (getFirstMultExpression().contains(t.kind)) {
-			multExpression();
+			e0 = multExpression();
 			while (t.isKind(Kind.OP_PLUS) || t.isKind(Kind.OP_MINUS)) {
+				Token currentOperator = t;
 				consume();
-				multExpression();
+				e1 = multExpression();
+				e0 = new Expression_Binary(firstToken, e0, currentOperator, e1);
 			}
 		} else {
 			throw new SyntaxException(t, MessageFormat.format(
 					"The token {0} is invalid at line number {1} , pos {2}",
 					t.kind, t.line, t.pos_in_line));
 		}
+
+		return e0;
 	}
 
-	void multExpression() throws SyntaxException {
+	Expression multExpression() throws SyntaxException {
+		Expression e0 = null;
+		Expression e1 = null;
+		Token firstToken = t;
 		if (getFirstUnaryExpression().contains(t.kind)) {
-			unaryExpression();
+			e0 = unaryExpression();
 			while (t.isKind(Kind.OP_TIMES) || t.isKind(Kind.OP_DIV)
 					|| t.isKind(Kind.OP_MOD)) {
+				Token currentOperator = t;
 				consume();
-				unaryExpression();
+				e1 = unaryExpression();
+				e0 = new Expression_Binary(firstToken, e0, currentOperator, e1);
 			}
 		} else {
 			throw new SyntaxException(t, MessageFormat.format(
 					"The token {0} is invalid at line number {1} , pos {2}",
 					t.kind, t.line, t.pos_in_line));
 		}
+
+		return e0;
 	}
 
-	void unaryExpression() throws SyntaxException {
+	Expression unaryExpression() throws SyntaxException {	
+		Token firstToken = t;
+		Expression expressionObj = null;
 		if (t.isKind(Kind.OP_PLUS) || t.isKind(Kind.OP_MINUS)) {
 			consume();
-			unaryExpression();
+			Expression unaryExpObj = unaryExpression();
+			expressionObj = new Expression_Unary(firstToken, t, unaryExpObj);
 		} else if (getFirstUnaryExpressionNotPlusMinus().contains(t.kind)) {
-			unaryExpressionNotPlusMinus();
+			expressionObj = unaryExpressionNotPlusMinus();
 		} else {
 			throw new SyntaxException(t, MessageFormat.format(
 					"The token {0} is invalid at line number {1} , pos {2}",
 					t.kind, t.line, t.pos_in_line));
 		}
+
+		return expressionObj;
 	}
 
-	void unaryExpressionNotPlusMinus() throws SyntaxException {	
+	Expression unaryExpressionNotPlusMinus() throws SyntaxException {	
+		Token firstToken = t;
+		Expression expressionObj = null;		
 		if (t.isKind(Kind.OP_EXCL)) {
 			consume();
-			unaryExpression();
+			Expression unaryExpObj = unaryExpression();
+			expressionObj = new Expression_Unary(firstToken, t, unaryExpObj);
 		} else if (getFirstPrimary().contains(t.kind)) {
-			primary();
+			expressionObj = primary();
 		} else if (t.isKind(IDENTIFIER)) {
-			identOrPixelSelectorExpression();
+			expressionObj = identOrPixelSelectorExpression();
 		} else if (getListKeyWordsForUnaryExpNotplusMinus().contains(t.kind)) {
+			expressionObj = new Expression_PredefinedName(firstToken, t.kind);
 			consume();
 		} else {
 			throw new SyntaxException(t, MessageFormat.format(
 					"The token {0} is invalid at line number {1} , pos {2}",
 					t.kind, t.line, t.pos_in_line));
 		}
+
+		return expressionObj;
 	}
 
-	void primary() throws SyntaxException {
-		if (t.isKind(Kind.INTEGER_LITERAL) || t.isKind(Kind.BOOLEAN_LITERAL)) {
+	Expression primary() throws SyntaxException {
+		Token firstToken = t;
+		Expression expressionObj = null;
+		if (t.isKind(Kind.INTEGER_LITERAL)) {
+			expressionObj = new Expression_IntLit(firstToken, t.intVal());
 			consume();
 		} else if (t.isKind(Kind.LPAREN)) {
 			consume();
-			expression();
+			expressionObj = expression();
 			match(Kind.RPAREN);
 		} else if (getFirstFunctionApplication().contains(t.kind)) {
-			functionApplication();
-		} else {
+			expressionObj = functionApplication();
+		}else if(t.isKind(Kind.BOOLEAN_LITERAL)){
+			expressionObj = new Expression_BooleanLit(firstToken, Boolean.valueOf(t.getText()));
+			consume();
+		}
+		else {
 			throw new SyntaxException(t, MessageFormat.format(
 					"The token {0} is invalid at line number {1} , pos {2}",
 					t.kind, t.line, t.pos_in_line));
 		}
+
+		return expressionObj;
 	}
 
-	void identOrPixelSelectorExpression() throws SyntaxException {
-		match(Kind.IDENTIFIER);
+	Expression identOrPixelSelectorExpression() throws SyntaxException {
+		Token firstToken = match(Kind.IDENTIFIER);
+		Expression expression = null;
 		if (t.isKind(Kind.LSQUARE)) {
 			consume();
-			selector();
+			Index selIndex = selector();
 			match(Kind.RSQUARE);
+			expression = new Expression_PixelSelector(firstToken, firstToken, selIndex); 
 		}
+
+		if(expression == null){
+			expression = new Expression_Ident(firstToken, firstToken);
+		}
+
+		return expression;
 	}
 
-	void lhs() throws SyntaxException {
-		match(Kind.IDENTIFIER);
-		restLhs();
+	LHS lhs() throws SyntaxException {
+		Token currentToken = match(Kind.IDENTIFIER);
+		return restLhs(currentToken);
 	}
-	
-	void restLhs() throws SyntaxException{
+
+	LHS restLhs(Token firstToken) throws SyntaxException{		
+		Index lhsSelectorIndex = null;
 		if (t.isKind(Kind.LSQUARE)) {
 			consume();
-			lhsSelector();
+			lhsSelectorIndex = lhsSelector();
 			match(Kind.RSQUARE);
 		}
+
+		return new LHS(firstToken, firstToken, lhsSelectorIndex);
 	}
 
-	void functionApplication() throws SyntaxException {
-		functionName();
+	Expression_FunctionApp functionApplication() throws SyntaxException {
+		Token currentToken = t;
+		Expression_FunctionApp expression_FunctionApp = null;
+		Kind function = functionName();
 		if (t.isKind(Kind.LPAREN)) {
 			consume();
-			expression();
+			Expression e0 = expression();
+			expression_FunctionApp = new Expression_FunctionAppWithExprArg(currentToken, function, e0);
 			match(Kind.RPAREN);
 		} else if (t.isKind(Kind.LSQUARE)) {
 			consume();
-			selector();
+			Index selIndex = selector();
+			expression_FunctionApp = new Expression_FunctionAppWithIndexArg(currentToken, function, selIndex);
 			match(Kind.RSQUARE);
 		} else {
 			throw new SyntaxException(t, MessageFormat.format(
 					"The token {0} is invalid at line number {1} , pos {2}",
 					t.kind, t.line, t.pos_in_line));
 		}	
-	}
-	
-	void raSelector() throws SyntaxException {
-		match(Kind.KW_r);
-		match(Kind.COMMA);
-		match(Kind.KW_A);
+
+		return expression_FunctionApp;
 	}
 
-	void xySelector() throws SyntaxException {
-		match(Kind.KW_x);
+	Index raSelector() throws SyntaxException {
+		Token firstToken = match(Kind.KW_r);
+		Expression e0 = new Expression_PredefinedName(firstToken, Kind.KW_r);
 		match(Kind.COMMA);
-		match(Kind.KW_y);
+		Token secondToken = match(Kind.KW_A);
+		Expression e1 = new Expression_PredefinedName(secondToken, Kind.KW_A);
+		return new Index(firstToken, e0, e1);
 	}
 
-	void functionName() throws SyntaxException {
+	Index xySelector() throws SyntaxException {
+		Token firstToken = match(Kind.KW_x);
+		Expression e0 = new Expression_PredefinedName(firstToken, Kind.KW_x);
+		match(Kind.COMMA);
+		Token secondToken = match(Kind.KW_y);
+		Expression e1 = new Expression_PredefinedName(secondToken, Kind.KW_y);
+		return new Index(firstToken, e0, e1);
+	}
+
+	Kind functionName() throws SyntaxException {
+		Kind tokenKind = null;
 		if (getFirstFunctionName().contains(t.kind)) {
+			tokenKind = t.kind;
 			consume();
 		} else {
 			throw new SyntaxException(t, MessageFormat.format(
 					"The token {0} is invalid at line number {1} , pos {2}",
 					t.kind, t.line, t.pos_in_line));
 		}
+		return tokenKind;
 	}
 
-	void lhsSelector() throws SyntaxException {
+	Index lhsSelector() throws SyntaxException {
+		Index lhsSelector = null;
 		match(Kind.LSQUARE);
 		if (t.isKind(Kind.KW_x)) {
-			xySelector();
+			lhsSelector = xySelector();
 		} else if (t.isKind(Kind.KW_r)) {
-			raSelector();
+			lhsSelector = raSelector();
 		} else {
 			throw new SyntaxException(t, MessageFormat.format(
 					"The token {0} is invalid at line number {1} , pos {2}",
 					t.kind, t.line, t.pos_in_line));
 		}
 		match(Kind.RSQUARE);
+		return lhsSelector;
 	}
 
-	void selector() throws SyntaxException {
-		expression();
+	Index selector() throws SyntaxException {
+		Token currentFirstToken = t;		
+		Expression e0 = expression();
 		match(Kind.COMMA);
-		expression();
+		Expression e1 = expression();
+		return new Index(currentFirstToken, e0, e1);
 	}
 
 	/**
@@ -504,7 +696,8 @@ public class SimpleParser {
 		throw new SyntaxException(t, message);
 	}
 
-	private void match(Kind kind) throws SyntaxException {
+	private Token match(Kind kind) throws SyntaxException {
+		Token currentToken = t;
 		if (t.kind == kind) {
 			consume();
 		} else {
@@ -512,6 +705,8 @@ public class SimpleParser {
 					"The token {0} is invalid at line number {1} , pos {2}",
 					t.kind, t.line, t.pos_in_line));
 		}
+
+		return currentToken;
 	}
 
 	private List<Kind> getFirstUnaryExpression() {
@@ -530,7 +725,7 @@ public class SimpleParser {
 		firstSet.addAll(getListKeyWordsForUnaryExpNotplusMinus());
 		return firstSet;
 	}
-	
+
 	private List<Kind> getListKeyWordsForUnaryExpNotplusMinus() {
 		return Arrays.asList(Kind.KW_x, Kind.KW_y, Kind.KW_r,
 				Kind.KW_a, Kind.KW_X, Kind.KW_Y, Kind.KW_Z, Kind.KW_A,
@@ -603,7 +798,7 @@ public class SimpleParser {
 	private List<Kind> getFirstStatement() {
 		return Arrays.asList(Kind.IDENTIFIER);
 	}
-		
+
 	private List<Kind> getFirstDeclaration() {
 		List<Kind> firstSet = new ArrayList<Scanner.Kind>();
 		firstSet.addAll(getFirstSourceSinkDeclaration());
