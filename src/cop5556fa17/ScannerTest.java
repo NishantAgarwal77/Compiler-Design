@@ -606,6 +606,14 @@ public class ScannerTest {
 	}
 	
 	@Test
+	public void test_Identifier_2234() throws LexicalException {
+		String input = "+3";		
+		Scanner scanner = new Scanner(input).scan();
+		show(input);
+		show(scanner);		
+	}
+	
+	@Test
 	public void testInValidInput1() throws LexicalException {
 		String input = "asjk \b";		
 		show(input);		

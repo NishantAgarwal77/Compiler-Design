@@ -25,6 +25,7 @@ public class SimpleParserTest {
 		}
 	}
 
+
 	/**
 	 * Simple test case with an empty program. This test expects an
 	 * SyntaxException because all legal programs must have at least an

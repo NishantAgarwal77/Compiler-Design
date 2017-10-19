@@ -80,7 +80,7 @@ public class Parser {
 	 * 
 	 * @throws SyntaxException
 	 */
-	Program program() throws SyntaxException {
+	public Program program() throws SyntaxException {
 		Token firstToken = t;
 		ArrayList<ASTNode> decsAndStatements = new ArrayList<ASTNode>();
 		if (t.isKind(Kind.IDENTIFIER)) {
@@ -94,6 +94,13 @@ public class Parser {
 					decsAndStatements.add(declaration());
 					match(Kind.SEMI);
 				}
+			}
+			
+			if(!t.isKind(Kind.EOF) && !(getFirstStatement().contains(t.kind)
+					|| getFirstDeclaration().contains(t.kind))){
+				throw new SyntaxException(t, MessageFormat.format(
+						"The token {0} is invalid at line number {1} , pos {2}",
+						t.kind, t.line, t.pos_in_line));
 			}
 			
 			return new Program(firstToken, firstToken, decsAndStatements);
@@ -351,7 +358,7 @@ public class Parser {
 	 * 
 	 * @throws SyntaxException
 	 */
-	Expression expression() throws SyntaxException {
+	public Expression expression() throws SyntaxException {
 		Token firstToken = t;
 		Expression e0 = null;
 		if (getFirstOrExpression().contains(t.kind)) {
@@ -510,7 +517,7 @@ public class Parser {
 		if (t.isKind(Kind.OP_PLUS) || t.isKind(Kind.OP_MINUS)) {
 			consume();
 			Expression unaryExpObj = unaryExpression();
-			expressionObj = new Expression_Unary(firstToken, t, unaryExpObj);
+			expressionObj = new Expression_Unary(firstToken, firstToken, unaryExpObj);
 		} else if (getFirstUnaryExpressionNotPlusMinus().contains(t.kind)) {
 			expressionObj = unaryExpressionNotPlusMinus();
 		} else {
@@ -528,7 +535,7 @@ public class Parser {
 		if (t.isKind(Kind.OP_EXCL)) {
 			consume();
 			Expression unaryExpObj = unaryExpression();
-			expressionObj = new Expression_Unary(firstToken, t, unaryExpObj);
+			expressionObj = new Expression_Unary(firstToken, firstToken, unaryExpObj);
 		} else if (getFirstPrimary().contains(t.kind)) {
 			expressionObj = primary();
 		} else if (t.isKind(IDENTIFIER)) {

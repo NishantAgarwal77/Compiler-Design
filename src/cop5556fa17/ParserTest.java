@@ -63,6 +63,17 @@ public class ParserTest {
 		assertEquals(ast.name, "prog");        //Check the name field in the Program object
 		assertTrue(ast.decsAndStatements.isEmpty());   //Check the decsAndStatements list in the Program object.  It should be empty.
 	}
+	
+	@Test
+	public void testNameOnly34() throws LexicalException, SyntaxException {
+		String input = "+3";  //Legal program with only a name
+		show(input);            //display input
+		Scanner scanner = new Scanner(input).scan();   //Create scanner and create token list
+		show(scanner);    //display the tokens
+		Parser parser = new Parser(scanner);   //create parser
+		Program ast = parser.parse();          //parse program and get AST
+		show(ast);                             //Display the AST
+	}
 
 	@Test
 	public void testDec134() throws LexicalException, SyntaxException {
@@ -84,15 +95,80 @@ public class ParserTest {
 	
 	@Test
 	public void exp1() throws SyntaxException, LexicalException {
-	String input = "Z-old";
-	Expression e = (new Parser(new Scanner(input).scan())).expression();
-	show(e);
-	assertEquals(Expression_Binary.class, e.getClass());
-	Expression_Binary ebin = (Expression_Binary)e;
-	assertEquals(Expression_PredefinedName.class, ebin.e0.getClass());
-	assertEquals(KW_Z, ((Expression_PredefinedName)(ebin.e0)).kind);
-	assertEquals(Expression_Ident.class, ebin.e1.getClass());
-	assertEquals("old", ((Expression_Ident)(ebin.e1)).name);
-	assertEquals(OP_MINUS, ebin.op);
-	}
+		String input = "Z-old";
+		Expression e = (new Parser(new Scanner(input).scan())).expression();
+		show(e);
+		assertEquals(Expression_Binary.class, e.getClass());
+		Expression_Binary ebin = (Expression_Binary)e;
+		assertEquals(Expression_PredefinedName.class, ebin.e0.getClass());
+		assertEquals(KW_Z, ((Expression_PredefinedName)(ebin.e0)).kind);
+		assertEquals(Expression_Ident.class, ebin.e1.getClass());
+		assertEquals("old", ((Expression_Ident)(ebin.e1)).name);
+		assertEquals(OP_MINUS, ebin.op);
+	}	
+	
+	@Test
+	public void exp2() throws SyntaxException, LexicalException {
+		String input = "+3";
+		Expression e = (new Parser(new Scanner(input).scan())).expression();
+		show(e);		
+	}	
+	
+	@Test
+	public void exp3() throws SyntaxException, LexicalException {
+		String input = "+-+-3;";
+		Expression e = (new Parser(new Scanner(input).scan())).expression();
+		show(e);		
+	}	
+	
+	@Test
+	public void exp5() throws SyntaxException, LexicalException {
+		String input = "-3;";
+		Expression e = (new Parser(new Scanner(input).scan())).expression();
+		show(e);		
+	}	
+	
+	@Test
+	public void exp6() throws SyntaxException, LexicalException {
+		String input = "++--x?x?R:a:abs[A,R]";
+		Expression e = (new Parser(new Scanner(input).scan())).expression();
+		show(e);		
+	}	
+	
+	@Test
+	public void exp7() throws SyntaxException, LexicalException {
+		String input = "!x";
+		Expression e = (new Parser(new Scanner(input).scan())).expression();
+		show(e);		
+	}	
+	
+	@Test
+	public void exp8() throws SyntaxException, LexicalException {
+		String input = "abs(-3)";
+		Expression e = (new Parser(new Scanner(input).scan())).expression();
+		show(e);		
+	}	
+	
+	@Test
+	public void exp9() throws SyntaxException, LexicalException {
+		String input = "b+c+d+-e-+f+!g";
+		Expression e = (new Parser(new Scanner(input).scan())).expression();
+		show(e);		
+	}	
+	
+	@Test
+	public void exp10() throws SyntaxException, LexicalException {
+		String input = "3*a/x%-Z";
+		Expression e = (new Parser(new Scanner(input).scan())).expression();
+		show(e);		
+	}	
+	
+	@Test
+	public void exp11() throws SyntaxException, LexicalException {
+		String input = "p[polar_r[x,y], p2[+x , -y]]";
+		Expression e = (new Parser(new Scanner(input).scan())).expression();
+		show(e);		
+	}	
+	
+	
 }
