@@ -6,13 +6,14 @@ public class LHS extends ASTNode{
 
 	public final String name;
 	public final Index index;
-
+	public Declaration declaration;
+	public boolean isCartesian;
 
 
 	public LHS(Token firstToken, Token name, Index index) {
 		super(firstToken);
 		this.name = name.getText();
-		this.index = index;
+		this.index = index;	
 	}
 
 	@Override

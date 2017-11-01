@@ -57,21 +57,15 @@ public class Expression_Ident extends Expression {
 	
 	public final String name;
 	
-	
-
 	public Expression_Ident(Token firstToken, Token ident) {
 		super(firstToken);
 		this.name = ident.getText();
 	}
-
-
-
+	
 	@Override
 	public Object visit(ASTVisitor v, Object arg) throws Exception {
 		return v.visitExpression_Ident(this, arg);
 	}
-
-
 
 	@Override
 	public int hashCode() {
@@ -99,8 +93,6 @@ public class Expression_Ident extends Expression {
 			return false;
 		return true;
 	}
-
-
 
 	@Override
 	public String toString() {
