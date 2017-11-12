@@ -449,5 +449,5 @@ public class TypeCheckTest {
 	 public void testDec49() throws Exception {
 		 String input5 = "prog int abc; abc[[x,y]] = 3;";		 
 		 typeCheck(input5);	 
-	 }		
+	 }			
 }

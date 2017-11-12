@@ -637,8 +637,8 @@ public class Parser {
 		Token firstToken = match(Kind.KW_r);
 		Expression e0 = new Expression_PredefinedName(firstToken, Kind.KW_r);
 		match(Kind.COMMA);
-		Token secondToken = match(Kind.KW_A);
-		Expression e1 = new Expression_PredefinedName(secondToken, Kind.KW_A);
+		Token secondToken = match(Kind.KW_a);
+		Expression e1 = new Expression_PredefinedName(secondToken, Kind.KW_a);
 		return new Index(firstToken, e0, e1);
 	}
 

@@ -173,15 +173,12 @@ public class TypeCheckVisitor implements ASTVisitor {
 			
 			if(!(index.e0.getType() == Type.INTEGER && index.e1.getType() == Type.INTEGER)){
 				throw new SemanticException(index.firstToken, MessageFormat.format("Expression0 type: {0} mismatch Expression1 Type: {1}",index.e0.getType(), index.e1.getType()));				
-			}
-			
-			//Kind exp0Type = ((Expression_PredefinedName)(index.e0)).kind;			
-			//Kind exp1Type = ((Expression_PredefinedName)(index.e1)).kind;
+			}						
 			
 			Kind exp0Type = index.e0.firstToken.kind;			
 			Kind exp1Type = index.e1.firstToken.kind;
 			
-			index.setCartesian(!(exp0Type == Kind.KW_r && exp1Type == Kind.KW_A));	
+			index.setCartesian(!(exp0Type == Kind.KW_r && exp1Type == Kind.KW_a));	
 		}
 		
 		return index;
@@ -194,19 +191,23 @@ public class TypeCheckVisitor implements ASTVisitor {
 		
 		if(expression_PixelSelector != null){
 			Declaration node = this.symbolTable.lookup(expression_PixelSelector.name);
-			if(expression_PixelSelector.index != null){
-				expression_PixelSelector.index.visit(this, null);
-			}
-			if(node.getType() == Type.IMAGE){
-				expression_PixelSelector.setType(Type.INTEGER);
-			}else if(expression_PixelSelector.index == null){
-				expression_PixelSelector.setType(node.getType());
+			if(node != null){
+				if(expression_PixelSelector.index != null){
+					expression_PixelSelector.index.visit(this, null);
+				}
+				if(node.getType() == Type.IMAGE){
+					expression_PixelSelector.setType(Type.INTEGER);
+				}else if(expression_PixelSelector.index == null){
+					expression_PixelSelector.setType(node.getType());
+				}else{
+					expression_PixelSelector.setType(null);
+				}
+				
+				if(expression_PixelSelector.getType() == null){
+					throw new SemanticException(expression_PixelSelector.firstToken, "Expression Pixel selector type is null");
+				}
 			}else{
-				expression_PixelSelector.setType(null);
-			}
-			
-			if(expression_PixelSelector.getType() == null){
-				throw new SemanticException(expression_PixelSelector.firstToken, "Expression Pixel selector type is null");
+				throw new SemanticException(expression_PixelSelector.firstToken, "Variable " + expression_PixelSelector.name +" must be declared before use");
 			}
 		}
 		
@@ -295,8 +296,8 @@ public class TypeCheckVisitor implements ASTVisitor {
 			Expression paramNum = source_CommandLineParam.paramNum;
 			if(paramNum != null){
 				paramNum.visit(this, null);
-			}			
-			source_CommandLineParam.setType(paramNum.getType());
+				source_CommandLineParam.setType(paramNum.getType());
+			}						
 			if(!source_CommandLineParam.isType(Type.INTEGER)){
 				throw new SemanticException(source_CommandLineParam.firstToken, "Source CommandLineParam Type:  expected INTEGER found " + source_CommandLineParam.getType());
 			}
