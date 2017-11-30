@@ -5,13 +5,22 @@ import cop5556fa17.Scanner.Token;
 public class TypeUtils {
 	
 	public static enum Type {
-		INTEGER,
-		BOOLEAN,
-		IMAGE,
-		URL,
-		FILE,
-		SCREEN,
-		NONE;
+		INTEGER("I"),
+		BOOLEAN("Z"),
+		IMAGE("IMAGE"),
+		URL("URL"),
+		FILE("FILE"),
+		SCREEN("SCREEN"),
+		NONE(null);
+		
+		String asmType;
+		Type(String asmType){
+			this.asmType = asmType;
+		}
+			
+		public String getASMType() {
+			return asmType;
+		}
 	}
 
 	public static Type getType(Token token){

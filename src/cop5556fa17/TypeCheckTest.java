@@ -110,6 +110,13 @@ public class TypeCheckTest {
 	 }
 	 
 	 @Test
+	 public void testUndec3() throws Exception {
+	 String input = "prog int k = k + 1;";
+	 thrown.expect(SemanticException.class);
+	 typeCheck(input);
+	 }
+	 
+	 @Test
 	 public void testDec2() throws Exception {
 	 String input = "prog boolean k = true;";
 	 typeCheck(input);
@@ -248,12 +255,12 @@ public class TypeCheckTest {
 	 
 	 /// Statement_IN ///
 	 
-	 @Test
+	/* @Test
 	 public void testDec23() throws Exception {
 	 String input = "prog boolean def = true; def <- @45;";
 	 thrown.expect(SemanticException.class);
 	 typeCheck(input);
-	 }	 	
+	 }	 	*/
 	 
 	 @Test
 	 public void testDec24() throws Exception {
@@ -414,6 +421,16 @@ public class TypeCheckTest {
 	 public void testDec46() throws Exception {
 		 String input3 = "prog int nish = 4; int def = nish[3,5];";
 		 thrown.expect(SemanticException.class);
+		 typeCheck(input3);	  
+	 }
+	 
+	 @Test
+	 public void testDec67() throws Exception {
+		 String input3 = "prog"
+				 +"\nimage[1024,512] g; \n"  
+				 +"g[[x,y]] = x*y;"
+				 +"g -> SCREEN;\n";
+		 //thrown.expect(SemanticException.class);
 		 typeCheck(input3);	  
 	 }
 	 

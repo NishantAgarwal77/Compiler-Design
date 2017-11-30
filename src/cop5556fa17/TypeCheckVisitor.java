@@ -448,9 +448,9 @@ public class TypeCheckVisitor implements ASTVisitor {
 			}			
 			statement_In.setDec(node);
 			
-			if(!(node != null && (node.getType() == statement_In.source.getType()))){
+			/*if(!(node != null && (node.getType() == statement_In.source.getType()))){
 				throw new SemanticException(statement_In.firstToken, "Source type " + statement_In.source.getType() + " mismatches with statement type " + node.getType());
-			}					
+			}	*/				
 		}
 		
 		return statement_In;

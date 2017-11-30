@@ -50,7 +50,5 @@ public interface ASTVisitor {
 
 	Object visitExpression_BooleanLit(Expression_BooleanLit expression_BooleanLit, Object arg) throws Exception;
 
-	Object visitExpression_Ident(Expression_Ident expression_Ident, Object arg) throws Exception;
-
-	
+	Object visitExpression_Ident(Expression_Ident expression_Ident, Object arg) throws Exception;	
 }
