@@ -314,7 +314,27 @@ public class CodeGenVisitorTest implements ImageResources {
 			}
 		}
 		keepFrame();
+	}
+	
+	@Test
+	public void imageGen5() throws Exception {
+		devel = false;
+		grade = true;
+		String prog = "imageGen4";
+		String input = prog + "\nimage[1024,1024] g; \n" + "g[[r,a]] = abs(r) ;" + "g -> SCREEN;\n";
+		byte[] bytecode = genCode(input);
+		String[] commandLineArgs = {};
+		runCode(prog, bytecode, commandLineArgs);
 
+		BufferedImage loggedImage = RuntimeLog.globalImageLog.get(0);
+		for (int y = 0; y < 1024; y++) {
+			for (int x = 0; x < 1024; x++) {
+				int pixelRef = RuntimeFunctions.polar_r(x, y);
+				int pixel = ImageSupport.getPixel(loggedImage, x, y);
+				assertEquals(pixelRef, pixel);
+			}
+		}
+		keepFrame();
 	}
 
 	@Test
