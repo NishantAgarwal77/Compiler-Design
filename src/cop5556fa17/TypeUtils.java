@@ -7,10 +7,10 @@ public class TypeUtils {
 	public static enum Type {
 		INTEGER("I"),
 		BOOLEAN("Z"),
-		IMAGE("IMAGE"),
-		URL("URL"),
-		FILE("FILE"),
-		SCREEN("SCREEN"),
+		IMAGE(ImageSupport.ImageDesc),
+		URL("Ljava/net/URL;"),
+		FILE("Ljava/io/File;"),
+		SCREEN(ImageSupport.JFrameDesc),
 		NONE(null);
 		
 		String asmType;

@@ -464,11 +464,11 @@ public class TypeCheckVisitor implements ASTVisitor {
 				statement_Assign.lhs.visit(this, null);
 				statement_Assign.e.visit(this, null);
 				
-				if(statement_Assign.lhs.getType() != statement_Assign.e.getType()){
+				if((statement_Assign.lhs.getType() == statement_Assign.e.getType()) || (statement_Assign.lhs.isType(Type.IMAGE) && statement_Assign.e.isType(Type.INTEGER))){
+					statement_Assign.setCartesian(statement_Assign.lhs.isCartesian);					
+				}else {
 					throw new SemanticException(statement_Assign.firstToken, "Type of Lhs and expression does not match");
-				}
-				
-				statement_Assign.setCartesian(statement_Assign.lhs.isCartesian);
+				}				
 			}else{
 				throw new SemanticException(statement_Assign.firstToken, "Type of Lhs and expression does not match");
 			}

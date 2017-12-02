@@ -28,8 +28,6 @@ public class Statement_Assign extends Statement {
 		this.isCartesian = isCartesian;
 	}
 
-
-
 	@Override
 	public Object visit(ASTVisitor v, Object arg) throws Exception {
 		return v.visitStatement_Assign(this, arg);
@@ -76,7 +74,4 @@ public class Statement_Assign extends Statement {
 		builder.append("]");
 		return builder.toString();
 	}
-	
-	
-
 }

@@ -1,5 +1,6 @@
 package cop5556fa17;
 
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
 import org.objectweb.asm.ClassWriter;
@@ -42,6 +43,8 @@ import cop5556fa17.TypeCheckVisitor.SemanticException;
 import cop5556fa17.AST.Statement_Assign;
 //import cop5556fa17.image.ImageFrame;
 //import cop5556fa17.image.ImageSupport;
+import cop5556fa17.ImageFrame;
+import cop5556fa17.ImageSupport;
 
 public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
@@ -83,6 +86,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 		String sourceFileName = (String) arg;
 		cw.visit(52, ACC_PUBLIC + ACC_SUPER, className, null, "java/lang/Object", null);
 		cw.visitSource(sourceFileName, null);
+					
 		// create main method
 		mv = cw.visitMethod(ACC_PUBLIC + ACC_STATIC, "main", "([Ljava/lang/String;)V", null, null);
 		// initialize
@@ -91,27 +95,53 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 		Label mainStart = new Label();
 		mv.visitLabel(mainStart);
 		// if GRADE, generates code to add string to log
-		CodeGenUtils.genLog(GRADE, mv, "entering main");
+		//CodeGenUtils.genLog(GRADE, mv, "entering main");
 
 		// visit decs and statements to add field to class
 		// and instructions to main method, respectively
+		FieldVisitor fv;
+		fv = cw.visitField(ACC_STATIC, "DEF_X", "I", null, null);
+		fv.visitEnd();
+		
+		fv = cw.visitField(ACC_STATIC, "DEF_Y", "I", null, null);
+		fv.visitEnd();
+		
+		fv = cw.visitField(ACC_STATIC, "Z", "I", null, null);
+		fv.visitEnd();
+				
+		mv.visitLdcInsn(new Integer(256));		
+		mv.visitFieldInsn(PUTSTATIC, className, "DEF_X", "I");
+		mv.visitLdcInsn(new Integer(256));
+		mv.visitFieldInsn(PUTSTATIC, className, "DEF_Y", "I");		
+		mv.visitLdcInsn(new Integer(16777215));	
+		mv.visitFieldInsn(PUTSTATIC, className, "Z", "I");
+		
 		ArrayList<ASTNode> decsAndStatements = program.decsAndStatements;
 		for (ASTNode node : decsAndStatements) {
 			node.visit(this, arg);
 		}
 
 		// generates code to add string to log
-		CodeGenUtils.genLog(GRADE, mv, "leaving main");
+		//CodeGenUtils.genLog(GRADE, mv, "leaving main");
 
 		// adds the required (by the JVM) return statement to main
 		mv.visitInsn(RETURN);
 
 		// adds label at end of code
 		Label mainEnd = new Label();
-		mv.visitLabel(mainEnd);
+		mv.visitLabel(mainEnd);		
 
 		// handles parameters and local variables of main. Right now, only args
 		mv.visitLocalVariable("args", "[Ljava/lang/String;", null, mainStart, mainEnd, 0);
+		mv.visitLocalVariable("x", "I", null, mainStart, mainEnd, 1);
+		mv.visitLocalVariable("y", "I", null, mainStart, mainEnd, 2);
+		mv.visitLocalVariable("X", "I", null, mainStart, mainEnd, 3);
+		mv.visitLocalVariable("Y", "I", null, mainStart, mainEnd, 4);
+		mv.visitLocalVariable("r", "I", null, mainStart, mainEnd, 5);
+		mv.visitLocalVariable("a", "I", null, mainStart, mainEnd, 6);
+		mv.visitLocalVariable("A", "I", null, mainStart, mainEnd, 7);
+		mv.visitLocalVariable("R", "I", null, mainStart, mainEnd, 8);		
+				
 
 		// Sets max stack size and number of local vars.
 		// Because we use ClassWriter.COMPUTE_FRAMES as a parameter in the constructor,
@@ -243,8 +273,8 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 			break;
 		}
 
-		CodeGenUtils.genLogTOS(GRADE, mv, expression_Binary.getType());
-		return null;
+		//CodeGenUtils.genLogTOS(GRADE, mv, expression_Binary.getType());
+		return null;		
 	}
 
 	@Override
@@ -285,7 +315,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 		}
 		}
 
-		CodeGenUtils.genLogTOS(GRADE, mv, expression_Unary.getType());
+		//CodeGenUtils.genLogTOS(GRADE, mv, expression_Unary.getType());
 		return null;
 	}
 
@@ -293,14 +323,33 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 	@Override
 	public Object visitIndex(Index index, Object arg) throws Exception {
 		// TODO HW6
-		throw new UnsupportedOperationException();
+		
+		index.e0.visit(this, null);
+		index.e1.visit(this, null);
+		
+		if(!index.isCartesian()){			
+			mv.visitInsn(Opcodes.DUP2);
+			mv.visitMethodInsn(INVOKESTATIC, RuntimeFunctions.className, "cart_x", RuntimeFunctions.cart_xSig,false);
+			mv.visitInsn(Opcodes.DUP_X2);
+			mv.visitInsn(Opcodes.POP);
+			mv.visitMethodInsn(INVOKESTATIC, RuntimeFunctions.className, "cart_y", RuntimeFunctions.cart_ySig,false);					
+		}
+				
+		return index;
 	}
 
 	@Override
 	public Object visitExpression_PixelSelector(Expression_PixelSelector expression_PixelSelector, Object arg)
 			throws Exception {
 		// TODO HW6
-		throw new UnsupportedOperationException();
+		
+		mv.visitFieldInsn(GETSTATIC, className, expression_PixelSelector.name, ImageSupport.ImageDesc);
+		if(expression_PixelSelector.index != null) {
+			expression_PixelSelector.index.visit(this, arg);
+		}
+		
+		mv.visitMethodInsn(INVOKESTATIC, ImageSupport.className, "getPixel", ImageSupport.getPixelSig,false);
+		return expression_PixelSelector;
 	}
 
 	@Override
@@ -323,15 +372,54 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 	}
 
 	@Override
-	public Object visitDeclaration_Image(Declaration_Image declaration_Image, Object arg) throws Exception {
-		// TODO HW6
-		throw new UnsupportedOperationException();
+	public Object visitDeclaration_Image(Declaration_Image declaration_Image, Object arg) throws Exception {		
+		FieldVisitor fv;
+		fv = cw.visitField(ACC_STATIC, declaration_Image.name, ImageSupport.ImageDesc, null,null);
+		fv.visitEnd();				
+		
+		if(declaration_Image.source != null) {
+			declaration_Image.source.visit(this, arg);
+			if(declaration_Image.xSize != null) {
+				declaration_Image.xSize.visit(this, arg);
+				mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
+			}else {
+				mv.visitInsn(ACONST_NULL);
+			}
+			
+			if(declaration_Image.ySize != null) {
+				declaration_Image.ySize.visit(this, arg);
+				mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
+			}else {
+				mv.visitInsn(ACONST_NULL);
+			}
+			
+			mv.visitMethodInsn(INVOKESTATIC, ImageSupport.className, "readImage", ImageSupport.readImageSig,false);
+		}else {
+			
+			if(declaration_Image.xSize != null) {
+				declaration_Image.xSize.visit(this, arg);
+			}else {
+				mv.visitFieldInsn(GETSTATIC, className, "DEF_X", "I");
+			}
+			
+			if(declaration_Image.ySize != null) {
+				declaration_Image.ySize.visit(this, arg);
+			}else {
+				mv.visitFieldInsn(GETSTATIC, className, "DEF_Y", "I");
+			}		
+			
+			mv.visitMethodInsn(INVOKESTATIC, ImageSupport.className, "makeImage", ImageSupport.makeImageSig,false);
+		}		
+		
+		mv.visitFieldInsn(PUTSTATIC, className, declaration_Image.name, ImageSupport.ImageDesc);
+		return declaration_Image;
 	}
 
 	@Override
 	public Object visitSource_StringLiteral(Source_StringLiteral source_StringLiteral, Object arg) throws Exception {
 		// TODO HW6
-		throw new UnsupportedOperationException();
+		mv.visitLdcInsn(source_StringLiteral.fileOrUrl);
+		return source_StringLiteral;
 	}
 
 	@Override
@@ -346,22 +434,32 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
 	@Override
 	public Object visitSource_Ident(Source_Ident source_Ident, Object arg) throws Exception {
-		// TODO HW6
-		throw new UnsupportedOperationException();
+		mv.visitFieldInsn(GETSTATIC, className, source_Ident.name, "Ljava/lang/String;");
+		return source_Ident;
 	}
 
 	@Override
 	public Object visitDeclaration_SourceSink(Declaration_SourceSink declaration_SourceSink, Object arg)
 			throws Exception {
 		// TODO HW6
-		throw new UnsupportedOperationException();
+		
+		FieldVisitor fv;
+		fv = cw.visitField(ACC_STATIC, declaration_SourceSink.name, "Ljava/lang/String;", null,null);
+		fv.visitEnd();
+		
+		if(declaration_SourceSink.source != null) {
+			declaration_SourceSink.source.visit(this, arg);
+			mv.visitFieldInsn(PUTSTATIC, className, declaration_SourceSink.name, ImageSupport.StringDesc);
+		}
+		
+		return declaration_SourceSink;
 	}
 
 	@Override
 	public Object visitExpression_IntLit(Expression_IntLit expression_IntLit, Object arg) throws Exception {
 		// TODO
 		mv.visitLdcInsn(new Integer(expression_IntLit.value));
-		CodeGenUtils.genLogTOS(GRADE, mv, Type.INTEGER);
+		//CodeGenUtils.genLogTOS(GRADE, mv, Type.INTEGER);
 		return null;
 	}
 
@@ -369,21 +467,122 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 	public Object visitExpression_FunctionAppWithExprArg(
 			Expression_FunctionAppWithExprArg expression_FunctionAppWithExprArg, Object arg) throws Exception {
 		// TODO HW6
-		throw new UnsupportedOperationException();
+
+		expression_FunctionAppWithExprArg.arg.visit(this, null);
+		switch (expression_FunctionAppWithExprArg.function) {
+		case KW_log: {
+			mv.visitMethodInsn(INVOKESTATIC, RuntimeFunctions.className, "log", RuntimeFunctions.logSig, false);
+		}
+			break;
+		case KW_abs: {
+			mv.visitMethodInsn(INVOKESTATIC, RuntimeFunctions.className, "abs", RuntimeFunctions.absSig, false);
+		}
+			break;
+		default: {
+			throw new UnsupportedOperationException();
+		}
+		}
+
+		return expression_FunctionAppWithExprArg;
 	}
 
 	@Override
 	public Object visitExpression_FunctionAppWithIndexArg(
 			Expression_FunctionAppWithIndexArg expression_FunctionAppWithIndexArg, Object arg) throws Exception {
 		// TODO HW6
-		throw new UnsupportedOperationException();
+				
+		switch(expression_FunctionAppWithIndexArg.function) {
+		case KW_cart_x : {
+			expression_FunctionAppWithIndexArg.arg.e0.visit(this, arg);
+			expression_FunctionAppWithIndexArg.arg.e1.visit(this, arg);
+			mv.visitMethodInsn(INVOKESTATIC, RuntimeFunctions.className, "cart_x", RuntimeFunctions.cart_xSig,false);
+		}
+		break;
+		case KW_cart_y : {
+			expression_FunctionAppWithIndexArg.arg.e0.visit(this, arg);
+			expression_FunctionAppWithIndexArg.arg.e1.visit(this, arg);
+			mv.visitMethodInsn(INVOKESTATIC, RuntimeFunctions.className, "cart_y", RuntimeFunctions.cart_ySig,false);
+		}
+		break;
+		case KW_polar_a :{
+			expression_FunctionAppWithIndexArg.arg.visit(this, arg);
+			mv.visitMethodInsn(INVOKESTATIC, RuntimeFunctions.className, "polar_a", RuntimeFunctions.polar_aSig,false);
+		}
+		break;
+		case KW_polar_r : {
+			expression_FunctionAppWithIndexArg.arg.visit(this, arg);
+			mv.visitMethodInsn(INVOKESTATIC, RuntimeFunctions.className, "polar_r", RuntimeFunctions.polar_rSig,false);
+		}
+		break;
+		default : {
+			throw new UnsupportedOperationException();
+		}
+		}
+		
+		return expression_FunctionAppWithIndexArg;
 	}
 
 	@Override
 	public Object visitExpression_PredefinedName(Expression_PredefinedName expression_PredefinedName, Object arg)
 			throws Exception {
 		// TODO HW6
-		throw new UnsupportedOperationException();
+		
+		switch (expression_PredefinedName.kind) {
+		case KW_x : {			
+			mv.visitVarInsn(ILOAD, 1);			
+		}
+		break;
+		case KW_y : {
+			mv.visitVarInsn(ILOAD, 2);
+		}
+		break;
+		case KW_X :{
+			mv.visitVarInsn(ILOAD, 3);
+		}
+		break;
+		case KW_Y : {
+			mv.visitVarInsn(ILOAD, 4);
+		}
+		break;
+		case KW_r : {
+			mv.visitVarInsn(ILOAD, 1);
+			mv.visitVarInsn(ILOAD, 2);			
+			mv.visitMethodInsn(INVOKESTATIC, RuntimeFunctions.className, "polar_r", RuntimeFunctions.polar_rSig,false);			
+			
+		}
+		break;
+		case KW_a : {
+			mv.visitVarInsn(ILOAD, 1);
+			mv.visitVarInsn(ILOAD, 2);
+			mv.visitMethodInsn(INVOKESTATIC, RuntimeFunctions.className, "polar_a", RuntimeFunctions.polar_aSig,false);
+		}
+		break;
+		case KW_A :{
+			mv.visitVarInsn(ILOAD, 7);
+		}
+		break;
+		case KW_R : {
+			mv.visitVarInsn(ILOAD, 8);
+		}
+		break;
+		case KW_Z : {
+			mv.visitFieldInsn(GETSTATIC, className, "Z", "I");	
+		}
+		break;
+		case KW_DEF_X : {
+			mv.visitFieldInsn(GETSTATIC, className, "DEF_X", "I");
+		}
+		break;
+		case KW_DEF_Y : {
+			mv.visitFieldInsn(GETSTATIC, className, "DEF_Y", "I");
+		}
+		break;
+		default : {
+			throw new UnsupportedOperationException();
+		}		
+		}
+		
+		return expression_PredefinedName;
 	}
 
 	/**
@@ -394,21 +593,30 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 	@Override
 	public Object visitStatement_Out(Statement_Out statement_Out, Object arg) throws Exception {
 		// TODO in HW5: only INTEGER and BOOLEAN
-
-		mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+		
 		switch (statement_Out.getDec().getType()) {
 		case INTEGER: {
+			mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
 			mv.visitFieldInsn(GETSTATIC, className, statement_Out.name, "I");
 			CodeGenUtils.genLogTOS(GRADE, mv, Type.INTEGER);
 			mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "print", "(I)V", false);
 		}
 			break;
 		case BOOLEAN: {
+			mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
 			mv.visitFieldInsn(GETSTATIC, className, statement_Out.name, "Z");
 			CodeGenUtils.genLogTOS(GRADE, mv, Type.BOOLEAN);
 			mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Z)V", false);
 		}
 			break;
+			
+		case IMAGE : {
+			mv.visitFieldInsn(GETSTATIC, className, statement_Out.name, ImageSupport.ImageDesc);
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC, "cop5556fa17/RuntimeLog", "globalLogAddImage", "("+ImageSupport.ImageDesc + ")V", false);
+			mv.visitFieldInsn(GETSTATIC, className, statement_Out.name, ImageSupport.ImageDesc);
+			statement_Out.sink.visit(this, arg);
+		}
+		break;
 		default: {
 			throw new UnsupportedOperationException();
 		}
@@ -445,7 +653,32 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 			mv.visitFieldInsn(PUTSTATIC, className, statement_In.name, "Z");
 		}
 			break;
-
+			
+		case IMAGE : {	
+			if(dec instanceof Declaration_Image) {
+				Declaration_Image dImage = (Declaration_Image)dec;
+				if(dImage.xSize != null) {
+					dImage.xSize.visit(this, arg);
+					mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
+				}else {
+					mv.visitInsn(ACONST_NULL);
+				}
+				
+				if(dImage.ySize != null) {
+					dImage.ySize.visit(this, arg);
+					mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
+				}else {
+					mv.visitInsn(ACONST_NULL);
+				}				
+			}else {
+				mv.visitInsn(ACONST_NULL);
+				mv.visitInsn(ACONST_NULL);
+			}
+			
+			mv.visitMethodInsn(INVOKESTATIC, ImageSupport.className, "readImage", ImageSupport.readImageSig,false);
+			mv.visitFieldInsn(PUTSTATIC, className, statement_In.name, ImageSupport.ImageDesc);			
+		}
+		break;
 		default: {
 			throw new UnsupportedOperationException();
 		}
@@ -460,8 +693,49 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 	@Override
 	public Object visitStatement_Assign(Statement_Assign statement_Assign, Object arg) throws Exception {
 
-		statement_Assign.e.visit(this, arg);
-		statement_Assign.lhs.visit(this, arg);
+		if(statement_Assign.lhs.declaration.isType(Type.BOOLEAN) || statement_Assign.lhs.declaration.isType(Type.INTEGER)) {
+			statement_Assign.e.visit(this, arg);
+			statement_Assign.lhs.visit(this, arg);
+		}
+		
+		if(statement_Assign.lhs.declaration.isType(Type.IMAGE)) {
+			mv.visitFieldInsn(GETSTATIC, className, statement_Assign.lhs.name, ImageSupport.ImageDesc);
+			mv.visitMethodInsn(INVOKESTATIC, ImageSupport.className, "getX", ImageSupport.getXSig,false);
+			mv.visitVarInsn(ISTORE, 3);
+			mv.visitFieldInsn(GETSTATIC, className, statement_Assign.lhs.name, ImageSupport.ImageDesc);
+			mv.visitMethodInsn(INVOKESTATIC, ImageSupport.className, "getY", ImageSupport.getYSig,false);
+			mv.visitVarInsn(ISTORE, 4);
+			mv.visitInsn(ICONST_0);
+			mv.visitVarInsn(ISTORE, 1);
+			
+			Label l4 = new Label();
+			mv.visitJumpInsn(GOTO, l4);
+			Label l5 = new Label();
+			mv.visitLabel(l5);						
+			mv.visitInsn(ICONST_0);
+			mv.visitVarInsn(ISTORE, 2);			
+			Label l7 = new Label();
+			mv.visitJumpInsn(GOTO, l7);
+			Label l8 = new Label();
+			mv.visitLabel(l8);			
+			
+			statement_Assign.e.visit(this, null);
+			statement_Assign.lhs.visit(this, arg);
+							
+			mv.visitIincInsn(2, 1);
+			mv.visitLabel(l7);
+								
+			mv.visitVarInsn(ILOAD, 2);
+			mv.visitVarInsn(ILOAD, 4);
+			mv.visitJumpInsn(IF_ICMPLT, l8);		
+			mv.visitIincInsn(1, 1);
+			mv.visitLabel(l4);
+					
+			mv.visitVarInsn(ILOAD, 1);
+			mv.visitVarInsn(ILOAD, 3);
+			mv.visitJumpInsn(IF_ICMPLT, l5);	
+		}
+		
 		return statement_Assign;
 	}
 
@@ -474,27 +748,39 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 		if (lhs.isType(Type.INTEGER) || lhs.isType(Type.BOOLEAN)) {
 			mv.visitFieldInsn(PUTSTATIC, className, lhs.name, lhs.getType().getASMType());
 		}
+		
+		if(lhs.isType(Type.IMAGE)) {
+			mv.visitFieldInsn(GETSTATIC, className, lhs.name, ImageSupport.ImageDesc);						
+			mv.visitVarInsn(ILOAD, 1);
+			mv.visitVarInsn(ILOAD, 2);
+			mv.visitMethodInsn(INVOKESTATIC, ImageSupport.className, "setPixel", ImageSupport.setPixelSig,false);		
+		}
 
 		return lhs;
 	}
-
+	
 	@Override
 	public Object visitSink_SCREEN(Sink_SCREEN sink_SCREEN, Object arg) throws Exception {
-		// TODO HW6
-		throw new UnsupportedOperationException();
+		// TODO HW6		
+		mv.visitMethodInsn(INVOKESTATIC, ImageSupport.className, "makeFrame", ImageSupport.makeFrameSig,false);
+		mv.visitInsn(Opcodes.POP);
+		return sink_SCREEN;
 	}
 
 	@Override
 	public Object visitSink_Ident(Sink_Ident sink_Ident, Object arg) throws Exception {
 		// TODO HW6
-		throw new UnsupportedOperationException();
+		
+		mv.visitFieldInsn(GETSTATIC, className, sink_Ident.name, ImageSupport.StringDesc);
+		mv.visitMethodInsn(INVOKESTATIC, ImageSupport.className, "write", ImageSupport.writeSig,false);
+		return sink_Ident;
 	}
 
 	@Override
 	public Object visitExpression_BooleanLit(Expression_BooleanLit expression_BooleanLit, Object arg) throws Exception {
 		// TODO
 		mv.visitLdcInsn(new Boolean(expression_BooleanLit.value));
-		CodeGenUtils.genLogTOS(GRADE, mv, Type.BOOLEAN);
+		//CodeGenUtils.genLogTOS(GRADE, mv, Type.BOOLEAN);
 		return null;
 	}
 
@@ -507,7 +793,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 			throw new UnsupportedOperationException();
 		}
 
-		CodeGenUtils.genLogTOS(GRADE, mv, expression_Ident.getType());
+		//CodeGenUtils.genLogTOS(GRADE, mv, expression_Ident.getType());
 		return null;
 	}
 

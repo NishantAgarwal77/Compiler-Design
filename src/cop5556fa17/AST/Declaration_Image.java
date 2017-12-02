@@ -79,9 +79,5 @@ public class Declaration_Image extends Declaration {
 		builder.append(source);
 		builder.append("]");
 		return builder.toString();
-	}
-
-
-
-	
+	}	
 }
