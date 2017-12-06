@@ -296,11 +296,12 @@ public class TypeCheckVisitor implements ASTVisitor {
 			Expression paramNum = source_CommandLineParam.paramNum;
 			if(paramNum != null){
 				paramNum.visit(this, null);
-				source_CommandLineParam.setType(paramNum.getType());
-			}						
-			if(!source_CommandLineParam.isType(Type.INTEGER)){
-				throw new SemanticException(source_CommandLineParam.firstToken, "Source CommandLineParam Type:  expected INTEGER found " + source_CommandLineParam.getType());
-			}
+				if(!paramNum.isType(Type.INTEGER)){
+					throw new SemanticException(source_CommandLineParam.firstToken, "Source CommandLineParam Type:  expected INTEGER found " + source_CommandLineParam.getType());
+				}
+			}		
+								
+			source_CommandLineParam.setType(Type.NONE);
 		}		
 		
 		return source_CommandLineParam;
@@ -340,11 +341,13 @@ public class TypeCheckVisitor implements ASTVisitor {
 			}					
 						
 			declaration_SourceSink.setType(TypeUtils.getType(declaration_SourceSink.firstToken));
-			if(declaration_SourceSink.source.getType() != declaration_SourceSink.getType()){
-				throw new SemanticException(declaration_SourceSink.firstToken, MessageFormat.format("Source type :{0} does not match with declaration sourceSink type {1}", declaration_SourceSink.source.getType(),declaration_SourceSink.getType()));
+			
+			if((declaration_SourceSink.source.getType() == declaration_SourceSink.getType()) || (declaration_SourceSink.source.getType() == Type.NONE)){
+				this.symbolTable.insert(declaration_SourceSink.name, declaration_SourceSink);
 			}
-						
-			this.symbolTable.insert(declaration_SourceSink.name, declaration_SourceSink);
+			else {
+				throw new SemanticException(declaration_SourceSink.firstToken, MessageFormat.format("Source type :{0} does not match with declaration sourceSink type {1}", declaration_SourceSink.source.getType(),declaration_SourceSink.getType()));
+			}						
 		}
 		
 		return declaration_SourceSink;

@@ -1,6 +1,7 @@
 package cop5556fa17;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.awt.image.BufferedImage;
 import java.io.FileOutputStream;
@@ -434,6 +435,22 @@ public class CodeGenVisitorTest implements ImageResources {
 	}
 	
 	@Test
+	public void imageGen10() throws Exception {
+		devel = false;
+		grade = true;
+		String prog = "image4";
+		String input = prog 
+		+ "\nimage[1024,1024] g; \n"
+		+ "g[[r,a]] = r*a * (r + a);\n"
+		+ "g -> SCREEN; \n"
+		;
+		byte[] bytecode = genCode(input);
+		String[] commandLineArgs = {};
+		runCode(prog, bytecode, commandLineArgs);
+		keepFrame();
+	}
+	
+	@Test
 	public void imageCopy1() throws Exception {
 		devel = false;
 		grade = true;
@@ -450,4 +467,60 @@ public class CodeGenVisitorTest implements ImageResources {
 
 		keepFrame();
 	}	
+	
+	@Test
+	public void imageIO2() throws Exception{
+		devel = false;
+		grade = true;
+		String prog = "imageIO2";
+		String input = prog
+				+ "//args: <imageURL>\n image g; \n file f = \"C://Users//Nishant//Desktop//Fall17//PLP//newImage.jpg\"; \ng <- @ 0;\ng -> SCREEN;\ng -> f;\nimage h;\nh <- f;\nh -> SCREEN;";
+		
+		byte[] bytecode = genCode(input);		
+		String[] commandLineArgs = {imageFile1 }; 		
+		runCode(prog, bytecode, commandLineArgs);
+		BufferedImage loggedImage0 = RuntimeLog.globalImageLog.get(0);
+		BufferedImage loggedImage1 = RuntimeLog.globalImageLog.get(1);
+		assertTrue(ImageSupport.compareImages(loggedImage0, loggedImage1));
+		keepFrame();
+	}
+	
+	@Test
+	public void imageCopy4() throws Exception{
+		devel = false;
+		grade = true;
+		String prog = "imageCopy";
+		String input = prog 
+				+ "\nimage[1024,1024] g; \n"
+				+ "\nimage[1024,1024] h; \n"
+				+ "g <- @ 0;\n"
+				+ "g -> SCREEN;\n"
+				+ "h[[x,y]] =  g[x,y];\n"
+				+ "h -> SCREEN; \n"
+				;
+		byte[] bytecode = genCode(input);		
+		String[] commandLineArgs = {imageFile1}; 
+		runCode(prog, bytecode, commandLineArgs);		
+	
+		BufferedImage loggedImage0 = RuntimeLog.globalImageLog.get(0);
+		BufferedImage loggedImage1 = RuntimeLog.globalImageLog.get(1);
+		assertTrue(ImageSupport.compareImages(loggedImage0,loggedImage1));	
+		
+		keepFrame();
+	}
+	
+	@Test
+	public void imageIO1() throws Exception{
+		devel = false;
+		grade = true;
+		String prog = "imageIO1";
+		String input = prog
+				+ "//args: <inputImageFullPath> <outputImageFullPath>\n image g; \n file f = @ 1; \ng <- @ 0;\ng -> SCREEN;\ng -> f;\nimage h;\nh <- f; \nh -> SCREEN;";
+		
+		byte[] bytecode = genCode(input);		
+		String[] commandLineArgs = {imageFile1, imageFile2}; 
+		runCode(prog, bytecode, commandLineArgs);	
+		
+		keepFrame();
+	}
 }
